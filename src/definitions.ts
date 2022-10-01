@@ -1,10 +1,5 @@
 export interface JokWebServerPlugin {
-  getIpAddresses(): Promise<
-    {
-      type: string
-      ipAddress: string
-    }[]
-  >
+  getIpAddress(): Promise<{ ipAddress: string }>
 
   start(props: {
     /**

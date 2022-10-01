@@ -54,6 +54,7 @@ public class JokWebServerPlugin: CAPPlugin {
     }
     
     @objc func start(_ call: CAPPluginCall) {
+        print("received it")
         let host = call.getString("host", "0.0.0.0")
         let port = call.getInt("port", 8080)
         let publicFolderPath = call.getString("publicFolderPath", "/public")
@@ -61,6 +62,7 @@ public class JokWebServerPlugin: CAPPlugin {
         
         let contentPath = Bundle.main.resourceURL!.path + publicFolderPath
         
+        server.addGETHandler(forBasePath: "/", directoryPath: contentPath, indexFilename: "index.html", cacheAge: 3600, allowRangeRequests: true)
         
         server.addHandler(forMethod: "GET", path: "/test", request: GCDWebServerURLEncodedFormRequest.self) { req in
             
@@ -69,8 +71,6 @@ public class JokWebServerPlugin: CAPPlugin {
             return GCDWebServerDataResponse(jsonObject: jsonResponse)
         }
         
-        server.addGETHandler(forBasePath: "/", directoryPath: contentPath, indexFilename: "index.html", cacheAge: 3600, allowRangeRequests: true)
-        
         server.start(withPort: UInt(port), bonjourName: deviceName)
         
         let serverUrl = server.serverURL
@@ -78,9 +78,9 @@ public class JokWebServerPlugin: CAPPlugin {
         let publicUrl = server.publicServerURL
         
         call.resolve([
-            "serverUrl": serverUrl!,
-            "bonjourUrl": bonjourUrl!,
-            "publicUrl": publicUrl!,
+            "serverUrl": serverUrl?.absoluteString ?? "",
+            "bonjourUrl": bonjourUrl?.absoluteString ?? "",
+            "publicUrl": publicUrl?.absoluteString ?? "",
         ])
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import Capacitor
+import GCDWebServer
 
 /**
  * Please read the Capacitor iOS Plugin Development Guide
@@ -7,7 +8,7 @@ import Capacitor
  */
 @objc(JokWebServerPlugin)
 public class JokWebServerPlugin: CAPPlugin {
-    private let implementation = JokWebServer()
+    private let server = GCDWebServer()
 
     @objc func getIpAddress(_ call: CAPPluginCall) {
         var address : String?
@@ -52,10 +53,34 @@ public class JokWebServerPlugin: CAPPlugin {
         ])
     }
     
-    @objc func echo(_ call: CAPPluginCall) {
-        let value = call.getString("value") ?? ""
+    @objc func start(_ call: CAPPluginCall) {
+        let host = call.getString("host", "0.0.0.0")
+        let port = call.getInt("port", 8080)
+        let publicFolderPath = call.getString("publicFolderPath", "/public")
+        let deviceName = call.getString("deviceName", "Gaming Center")
+        
+        let contentPath = Bundle.main.resourceURL!.path + publicFolderPath
+        
+        
+        server.addHandler(forMethod: "GET", path: "/test", request: GCDWebServerURLEncodedFormRequest.self) { req in
+            
+            let jsonResponse = ["type":"success","Message":"Image not avilable."]
+            
+            return GCDWebServerDataResponse(jsonObject: jsonResponse)
+        }
+        
+        server.addGETHandler(forBasePath: "/", directoryPath: contentPath, indexFilename: "index.html", cacheAge: 3600, allowRangeRequests: true)
+        
+        server.start(withPort: UInt(port), bonjourName: deviceName)
+        
+        let serverUrl = server.serverURL
+        let bonjourUrl = server.bonjourServerURL
+        let publicUrl = server.publicServerURL
+        
         call.resolve([
-            "value": implementation.echo(value)
+            "serverUrl": serverUrl!,
+            "bonjourUrl": bonjourUrl!,
+            "publicUrl": publicUrl!,
         ])
     }
 }

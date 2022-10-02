@@ -2,10 +2,13 @@ import { WebPlugin } from '@capacitor/core';
 import type { JokWebServerPlugin } from './definitions';
 export declare class JokWebServerWeb extends WebPlugin implements JokWebServerPlugin {
     start(_: {
-        publicFolderPath?: string | undefined;
-        hostname?: string | undefined;
+        deviceName?: string | undefined;
         port?: number | undefined;
-    }): Promise<boolean>;
+        publicFolderPath?: string | undefined;
+        apiPath?: string | undefined;
+    }): Promise<{
+        serverUrl: string;
+    }>;
     stop(): Promise<void>;
     onRequest(_: (props: {
         requestId: string;

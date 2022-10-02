@@ -28,14 +28,14 @@ npx cap sync
 ### start(...)
 
 ```typescript
-start(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<boolean>
+start(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<{ serverUrl: string; }>
 ```
 
 | Param       | Type                                                                                              |
 | ----------- | ------------------------------------------------------------------------------------------------- |
 | **`props`** | <code>{ deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }</code> |
 
-**Returns:** <code>Promise&lt;boolean&gt;</code>
+**Returns:** <code>Promise&lt;{ serverUrl: string; }&gt;</code>
 
 --------------------
 
@@ -65,12 +65,12 @@ onRequest(callback: PluginCallback) => Promise<void>
 ### sendResponse(...)
 
 ```typescript
-sendResponse(props: { requestId: string; status: number; body: string; headers: Record<string, string>; }) => Promise<void>
+sendResponse(props: { requestId: string; body: string; status?: number; headers?: Record<string, string>; }) => Promise<void>
 ```
 
-| Param       | Type                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **`props`** | <code>{ requestId: string; status: number; body: string; headers: <a href="#record">Record</a>&lt;string, string&gt;; }</code> |
+| Param       | Type                                                                                                                             |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **`props`** | <code>{ requestId: string; body: string; status?: number; headers?: <a href="#record">Record</a>&lt;string, string&gt;; }</code> |
 
 --------------------
 

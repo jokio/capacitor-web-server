@@ -17,13 +17,15 @@ export interface JokWebServerPlugin {
          * @default /api
          */
         apiPath?: string;
-    }): Promise<boolean>;
+    }): Promise<{
+        serverUrl: string;
+    }>;
     stop(): Promise<void>;
     onRequest(callback: PluginCallback): Promise<void>;
     sendResponse(props: {
         requestId: string;
-        status: number;
         body: string;
-        headers: Record<string, string>;
+        status?: number;
+        headers?: Record<string, string>;
     }): Promise<void>;
 }

@@ -7,10 +7,11 @@ export class JokWebServerWeb
   implements JokWebServerPlugin
 {
   start(_: {
-    publicFolderPath?: string | undefined
-    hostname?: string | undefined
+    deviceName?: string | undefined
     port?: number | undefined
-  }): Promise<boolean> {
+    publicFolderPath?: string | undefined
+    apiPath?: string | undefined
+  }): Promise<{ serverUrl: string }> {
     throw new Error('Method not implemented.')
   }
   stop(): Promise<void> {

@@ -7,7 +7,7 @@
     "methods": [
       {
         "name": "start",
-        "signature": "(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<boolean>",
+        "signature": "(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<{ serverUrl: string; }>",
         "parameters": [
           {
             "name": "props",
@@ -15,7 +15,7 @@
             "type": "{ deviceName?: string | undefined; port?: number | undefined; publicFolderPath?: string | undefined; apiPath?: string | undefined; }"
           }
         ],
-        "returns": "Promise<boolean>",
+        "returns": "Promise<{ serverUrl: string; }>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
@@ -51,12 +51,12 @@
       },
       {
         "name": "sendResponse",
-        "signature": "(props: { requestId: string; status: number; body: string; headers: Record<string, string>; }) => Promise<void>",
+        "signature": "(props: { requestId: string; body: string; status?: number; headers?: Record<string, string>; }) => Promise<void>",
         "parameters": [
           {
             "name": "props",
             "docs": "",
-            "type": "{ requestId: string; status: number; body: string; headers: Record<string, string>; }"
+            "type": "{ requestId: string; body: string; status?: number | undefined; headers?: Record<string, string> | undefined; }"
           }
         ],
         "returns": "Promise<void>",

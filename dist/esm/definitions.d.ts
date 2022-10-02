@@ -1,7 +1,4 @@
 export interface JokWebServerPlugin {
-    getIpAddress(): Promise<{
-        ipAddress: string;
-    }>;
     start(props: {
         /**
          * @default /public
@@ -17,11 +14,18 @@ export interface JokWebServerPlugin {
         port?: number;
     }): Promise<boolean>;
     stop(): Promise<void>;
-    onRequest(props: {
+    onRequest(callback: (props: {
+        requestId: string;
         headers: Record<string, string>;
         method: string;
         path: string;
         query: Record<string, string>;
         body: string;
-    }): Promise<Object>;
+    }) => void): Promise<void>;
+    sendResponse(props: {
+        requestId: string;
+        status: number;
+        body: string;
+        headers: Record<string, string>;
+    }): Promise<void>;
 }

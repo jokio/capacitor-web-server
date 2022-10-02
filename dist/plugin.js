@@ -6,9 +6,6 @@ var capacitorJokWebServer = (function (exports, core) {
     });
 
     class JokWebServerWeb extends core.WebPlugin {
-        getIpAddress() {
-            throw new Error('Method not implemented.');
-        }
         start(_) {
             throw new Error('Method not implemented.');
         }
@@ -16,6 +13,9 @@ var capacitorJokWebServer = (function (exports, core) {
             throw new Error('Method not implemented.');
         }
         onRequest(_) {
+            throw new Error('Method not implemented.');
+        }
+        sendResponse(_) {
             throw new Error('Method not implemented.');
         }
     }

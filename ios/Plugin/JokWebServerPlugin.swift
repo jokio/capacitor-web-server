@@ -7,70 +7,34 @@ import GCDWebServer
  * here: https://capacitorjs.com/docs/plugins/ios
  */
 @objc(JokWebServerPlugin)
-public class JokWebServerPlugin: CAPPlugin {
-    private let server = GCDWebServer()
+public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
+    let TIMEOUT: Int = 60 * 3 * 1000000
 
-    @objc func getIpAddress(_ call: CAPPluginCall) {
-        var address : String?
-        
-        // Get list of all interfaces on the local machine:
-        var ifaddr : UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifaddr) == 0 else {
-            call.reject("Address not found")
-            return
-        }
-        guard let firstAddr = ifaddr else {
-            call.reject("Address not found")
-            return
-        }
-        
-        // For each interface ...
-        for ifptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
-            let interface = ifptr.pointee
-            
-            // Check for IPv4 or IPv6 interface:
-            let addrFamily = interface.ifa_addr.pointee.sa_family
-            if addrFamily == UInt8(AF_INET) || addrFamily == UInt8(AF_INET6) {
-                
-                // Check interface name:
-                let name = String(cString: interface.ifa_name)
-                if  (name == "en0") || (name == "pdp_ip0")  {
-                    
-                    // Convert interface address to a human readable string:
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-                                &hostname, socklen_t(hostname.count),
-                                nil, socklen_t(0), NI_NUMERICHOST)
-                    address = String(cString: hostname)
-                }
-            }
-        }
-        
-        freeifaddrs(ifaddr)
-        
-        call.resolve([
-            "ipAddress": address!
-        ])
-    }
+    private var server = GCDWebServer()
+    private var onRequestCommand: CAPPluginCall? = nil
+    private var responses = SynchronizedDictionary<AnyHashable,Any?>()
     
     @objc func start(_ call: CAPPluginCall) {
-        print("received it")
-        let host = call.getString("host", "0.0.0.0")
-        let port = call.getInt("port", 8080)
+        let port =  call.getInt("port", 8080)
         let publicFolderPath = call.getString("publicFolderPath", "/public")
         let deviceName = call.getString("deviceName", "Gaming Center")
         
         let contentPath = Bundle.main.resourceURL!.path + publicFolderPath
         
+        server = GCDWebServer()
+        
         server.addGETHandler(forBasePath: "/", directoryPath: contentPath, indexFilename: "index.html", cacheAge: 3600, allowRangeRequests: true)
         
-        server.addHandler(forMethod: "GET", path: "/test", request: GCDWebServerURLEncodedFormRequest.self) { req in
-            
-            let jsonResponse = ["type":"success","Message":"Image not avilable."]
-            
-            return GCDWebServerDataResponse(jsonObject: jsonResponse)
-        }
-        
+        server.addHandler(match: { requestMethod, requestURL, requestHeaders, urlPath, urlQuery in
+            return GCDWebServerDataRequest(method: requestMethod, url: requestURL, headers: requestHeaders, path: urlPath, query: urlQuery)
+        }, asyncProcessBlock: self.processRequest)
+
+        server.delegate = self
+
+//        server.addHandler(forMethod: "GET", path: "/test", request: GCDWebServerURLEncodedFormRequest.self) { req in
+//
+//        }
+                
         server.start(withPort: UInt(port), bonjourName: deviceName)
         
         let serverUrl = server.serverURL
@@ -82,5 +46,106 @@ public class JokWebServerPlugin: CAPPlugin {
             "bonjourUrl": bonjourUrl?.absoluteString ?? "",
             "publicUrl": publicUrl?.absoluteString ?? "",
         ])
+    }
+    
+    @objc func stop(_ command: CAPPluginCall) {
+        if server.isRunning {
+            server.stop()
+        }
+        
+        print("Stopping webserver")
+        
+        if onRequestCommand != nil {
+            onRequestCommand!.keepAlive = false
+            onRequestCommand!.resolve()
+        }
+    }
+    
+    @objc func onRequest(_ call: CAPPluginCall) {
+        self.onRequestCommand = call
+        call.keepAlive = true
+    }
+
+    @objc func sendResponse(_ call: CAPPluginCall) {
+        let requestId = call.getString("requestId")
+        let response = call.getObject("result")
+        
+        if (requestId != nil) {
+            self.responses[requestId] = response
+        } else {
+            print("invalid response received, \(String(describing: requestId)) \(String(describing: response))")
+        }
+    }
+    
+    public func webServerDidCompleteBonjourRegistration(_ server: GCDWebServer) {
+        self.bridge?.triggerDocumentJSEvent(
+            eventName: "bonjourUrlRegistered",
+            data: ("{'bonjourUrl': '" + (server.bonjourServerURL?.absoluteString ?? "") + "'}")
+        )
+    }
+    
+    func processRequest(req: GCDWebServerRequest, completionBlock: GCDWebServerCompletionBlock) {
+        var timeout = 0
+        // Fetch data as GCDWebserverDataRequest
+        let requestUUID = UUID().uuidString
+        // Transform it into an dictionary for the javascript plugin
+        let requestDict = self.requestToRequestDict(requestUUID: requestUUID, request: req)
+        
+        if (onRequestCommand != nil) {
+            onRequestCommand!.resolve(requestDict)
+        }
+        
+        // Here we have to wait until the javascript block fetches the message and do a response
+        while self.responses[requestUUID] == nil {
+            timeout += 1000
+            usleep(1000)
+            
+            
+            if (timeout > TIMEOUT) {
+                self.responses[requestUUID] = [
+                    ["status", 500],
+                    ["body", "Processing Timeout :("]
+                ]
+                break
+            }
+        }
+
+        // We got the dict so put information in the response
+        let responseDict = self.responses[requestUUID] as! Dictionary<AnyHashable, Any>
+
+        // Check if a file path is provided else use regular data response
+        let response = GCDWebServerDataResponse(text: responseDict["body"] as! String)
+
+        if responseDict["status"] != nil {
+            response?.statusCode = responseDict["status"] as! Int
+        }
+
+        for (key, value) in (responseDict["headers"] as! Dictionary<String, String>) {
+            response?.setValue(value, forAdditionalHeader: key)
+        }
+
+        // Remove the handled response
+        self.responses.removeValue(forKey: requestUUID)
+
+        // Complete the async response
+        completionBlock(response!)
+    }
+    
+    func requestToRequestDict(requestUUID: String, request: GCDWebServerRequest) -> Dictionary<String, Any> {
+        let dataRequest = request as! GCDWebServerDataRequest
+        var body = ""
+
+        if dataRequest.hasBody() {
+            body = String(data: dataRequest.data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)) ?? ""
+        }
+
+        return [
+            "requestId": requestUUID,
+            "body": body,
+            "headers": dataRequest.headers,
+            "method": dataRequest.method,
+            "path": dataRequest.url.path,
+            "query": dataRequest.url.query ?? ""
+        ]
     }
 }

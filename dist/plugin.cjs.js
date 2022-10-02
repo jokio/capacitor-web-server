@@ -9,9 +9,6 @@ const JokWebServer = core.registerPlugin('JokWebServer', {
 });
 
 class JokWebServerWeb extends core.WebPlugin {
-    getIpAddress() {
-        throw new Error('Method not implemented.');
-    }
     start(_) {
         throw new Error('Method not implemented.');
     }
@@ -19,6 +16,9 @@ class JokWebServerWeb extends core.WebPlugin {
         throw new Error('Method not implemented.');
     }
     onRequest(_) {
+        throw new Error('Method not implemented.');
+    }
+    sendResponse(_) {
         throw new Error('Method not implemented.');
     }
 }

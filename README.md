@@ -17,6 +17,7 @@ npx cap sync
 * [`stop()`](#stop)
 * [`onRequest(...)`](#onrequest)
 * [`sendResponse(...)`](#sendresponse)
+* [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 
 </docgen-index>
@@ -27,12 +28,12 @@ npx cap sync
 ### start(...)
 
 ```typescript
-start(props: { publicFolderPath?: string; hostname?: string; port?: number; }) => Promise<boolean>
+start(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<boolean>
 ```
 
-| Param       | Type                                                                          |
-| ----------- | ----------------------------------------------------------------------------- |
-| **`props`** | <code>{ publicFolderPath?: string; hostname?: string; port?: number; }</code> |
+| Param       | Type                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| **`props`** | <code>{ deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }</code> |
 
 **Returns:** <code>Promise&lt;boolean&gt;</code>
 
@@ -51,12 +52,12 @@ stop() => Promise<void>
 ### onRequest(...)
 
 ```typescript
-onRequest(callback: (props: { requestId: string; headers: Record<string, string>; method: string; path: string; query: Record<string, string>; body: string; }) => void) => Promise<void>
+onRequest(callback: PluginCallback) => Promise<void>
 ```
 
-| Param          | Type                                                                                                                                                                                                                        |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`callback`** | <code>(props: { requestId: string; headers: <a href="#record">Record</a>&lt;string, string&gt;; method: string; path: string; query: <a href="#record">Record</a>&lt;string, string&gt;; body: string; }) =&gt; void</code> |
+| Param          | Type                                                      |
+| -------------- | --------------------------------------------------------- |
+| **`callback`** | <code><a href="#plugincallback">PluginCallback</a></code> |
 
 --------------------
 
@@ -74,7 +75,25 @@ sendResponse(props: { requestId: string; status: number; body: string; headers: 
 --------------------
 
 
+### Interfaces
+
+
+#### PluginResultData
+
+
+#### PluginResultError
+
+| Prop          | Type                |
+| ------------- | ------------------- |
+| **`message`** | <code>string</code> |
+
+
 ### Type Aliases
+
+
+#### PluginCallback
+
+<code>(data: <a href="#pluginresultdata">PluginResultData</a>, error?: <a href="#pluginresulterror">PluginResultError</a>): void</code>
 
 
 #### Record

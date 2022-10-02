@@ -17,23 +17,29 @@ public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
     @objc func start(_ call: CAPPluginCall) {
         let port =  call.getInt("port", 8080)
         let publicFolderPath = call.getString("publicFolderPath", "/public")
-        let deviceName = call.getString("deviceName", "Gaming Center")
+        let apiPath = call.getString("apiPath", "/api")
+        let deviceName = call.getString("deviceName", "GamingCenter")
         
         let contentPath = Bundle.main.resourceURL!.path + publicFolderPath
-        
-        server = GCDWebServer()
-        
+
         server.addGETHandler(forBasePath: "/", directoryPath: contentPath, indexFilename: "index.html", cacheAge: 3600, allowRangeRequests: true)
         
         server.addHandler(match: { requestMethod, requestURL, requestHeaders, urlPath, urlQuery in
-            return GCDWebServerDataRequest(method: requestMethod, url: requestURL, headers: requestHeaders, path: urlPath, query: urlQuery)
+            if (urlPath.starts(with: apiPath)){
+                return GCDWebServerDataRequest(
+                    method: requestMethod,
+                    url: requestURL,
+                    headers: requestHeaders,
+                    path: urlPath,
+                    query: urlQuery
+                )
+            }
+            else {
+                return nil
+            }
         }, asyncProcessBlock: self.processRequest)
 
         server.delegate = self
-
-//        server.addHandler(forMethod: "GET", path: "/test", request: GCDWebServerURLEncodedFormRequest.self) { req in
-//
-//        }
                 
         server.start(withPort: UInt(port), bonjourName: deviceName)
         
@@ -67,13 +73,20 @@ public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
     }
 
     @objc func sendResponse(_ call: CAPPluginCall) {
-        let requestId = call.getString("requestId")
-        let response = call.getObject("result")
+        let requestId = call.getString("requestId", "")
+        let status = call.getInt("status", 200)
+        let body = call.getString("body", "")
+        let headers = call.getObject("headers")
         
-        if (requestId != nil) {
+        if (requestId != "") {
+            let response: [AnyHashable: Any] = [
+                "status": status,
+                "body": body,
+                "headers": headers,
+            ]
             self.responses[requestId] = response
         } else {
-            print("invalid response received, \(String(describing: requestId)) \(String(describing: response))")
+            print("invalid response received, \(String(describing: requestId)) \(String(describing: status))")
         }
     }
     
@@ -99,7 +112,6 @@ public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
         while self.responses[requestUUID] == nil {
             timeout += 1000
             usleep(1000)
-            
             
             if (timeout > TIMEOUT) {
                 self.responses[requestUUID] = [

@@ -7,12 +7,12 @@
     "methods": [
       {
         "name": "start",
-        "signature": "(props: { publicFolderPath?: string; hostname?: string; port?: number; }) => Promise<boolean>",
+        "signature": "(props: { deviceName?: string; port?: number; publicFolderPath?: string; apiPath?: string; }) => Promise<boolean>",
         "parameters": [
           {
             "name": "props",
             "docs": "",
-            "type": "{ publicFolderPath?: string | undefined; hostname?: string | undefined; port?: number | undefined; }"
+            "type": "{ deviceName?: string | undefined; port?: number | undefined; publicFolderPath?: string | undefined; apiPath?: string | undefined; }"
           }
         ],
         "returns": "Promise<boolean>",
@@ -33,19 +33,19 @@
       },
       {
         "name": "onRequest",
-        "signature": "(callback: (props: { requestId: string; headers: Record<string, string>; method: string; path: string; query: Record<string, string>; body: string; }) => void) => Promise<void>",
+        "signature": "(callback: PluginCallback) => Promise<void>",
         "parameters": [
           {
             "name": "callback",
             "docs": "",
-            "type": "(props: { requestId: string; headers: Record<string, string>; method: string; path: string; query: Record<string, string>; body: string; }) => void"
+            "type": "PluginCallback"
           }
         ],
         "returns": "Promise<void>",
         "tags": [],
         "docs": "",
         "complexTypes": [
-          "Record"
+          "PluginCallback"
         ],
         "slug": "onrequest"
       },
@@ -70,9 +70,48 @@
     ],
     "properties": []
   },
-  "interfaces": [],
+  "interfaces": [
+    {
+      "name": "PluginResultData",
+      "slug": "pluginresultdata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": []
+    },
+    {
+      "name": "PluginResultError",
+      "slug": "pluginresulterror",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "message",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    }
+  ],
   "enums": [],
   "typeAliases": [
+    {
+      "name": "PluginCallback",
+      "slug": "plugincallback",
+      "docs": "",
+      "types": [
+        {
+          "text": "(data: PluginResultData, error?: PluginResultError | undefined): void",
+          "complexTypes": [
+            "PluginResultData",
+            "PluginResultError"
+          ]
+        }
+      ]
+    },
     {
       "name": "Record",
       "slug": "record",

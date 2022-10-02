@@ -1,27 +1,25 @@
+import { PluginCallback } from '@capacitor/core';
 export interface JokWebServerPlugin {
     start(props: {
+        /**
+         * @default "GamingCenter"
+         */
+        deviceName?: string;
+        /**
+         * @default 8080
+         */
+        port?: number;
         /**
          * @default /public
          */
         publicFolderPath?: string;
         /**
-         * @default 0.0.0.0
+         * @default /api
          */
-        hostname?: string;
-        /**
-         * @default 8080
-         */
-        port?: number;
+        apiPath?: string;
     }): Promise<boolean>;
     stop(): Promise<void>;
-    onRequest(callback: (props: {
-        requestId: string;
-        headers: Record<string, string>;
-        method: string;
-        path: string;
-        query: Record<string, string>;
-        body: string;
-    }) => void): Promise<void>;
+    onRequest(callback: PluginCallback): Promise<void>;
     sendResponse(props: {
         requestId: string;
         status: number;

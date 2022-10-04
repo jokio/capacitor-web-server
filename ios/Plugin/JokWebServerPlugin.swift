@@ -132,8 +132,11 @@ public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
             response?.statusCode = responseDict["status"] as! Int
         }
 
-        for (key, value) in (responseDict["headers"] as! Dictionary<String, String>) {
-            response?.setValue(value, forAdditionalHeader: key)
+        let headers = responseDict["headers"] as? Dictionary<String, String>
+        if ((headers) != nil){
+            for (key, value) in (headers!) {
+                response?.setValue(value, forAdditionalHeader: key)
+            }
         }
 
         // Remove the handled response
@@ -156,8 +159,7 @@ public class JokWebServerPlugin: CAPPlugin, GCDWebServerDelegate {
             "body": body,
             "headers": dataRequest.headers,
             "method": dataRequest.method,
-            "path": dataRequest.url.path,
-            "query": dataRequest.url.query ?? ""
+            "url": dataRequest.url.absoluteString,
         ]
     }
 }
